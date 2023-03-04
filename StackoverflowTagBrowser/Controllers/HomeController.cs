@@ -19,10 +19,10 @@ namespace StackoverflowTagBrowser.Controllers
 
         public async Task<IActionResult> Index()
         {
-            TagViewModel tags;
+            TagViewModel tagVM;
             try
             {
-                tags = await _stackExchangeService.GetMostPopularTagsAsync("stackoverflow", 1000, SortType.popular, SortOrder.desc);
+                tagVM = await _stackExchangeService.GetTagsAsync("stackoverflow", 1000, SortType.popular, SortOrder.desc);
             }
             catch (RateLimitException ex)
             {
@@ -32,7 +32,7 @@ namespace StackoverflowTagBrowser.Controllers
             {
                 return View("NotOk", new NotOkViewModel() { StatusCode = (int)ex.StatusCode, Description = ex.Message});
             }
-            return View(tags);
+            return View(tagVM);
         }
 
         public IActionResult Privacy()

@@ -15,36 +15,36 @@ namespace StackoverflowTagBrowser.Data.Services.StackExchangeService
         {
             _httpClient = httpClientFactory.CreateClient();
         }
-        public async Task<TagViewModel> GetMostPopularTagsAsync(string site, int quantity, SortType sortType, SortOrder sortOrder)
+        public async Task<TagViewModel> GetTagsAsync(string site, int quantity, SortType sortType, SortOrder sortOrder)
         {
-            List<Tag> tags = new();
-            int tagsTotal = 0;
-            int page = 1;
-            while (tagsTotal < quantity)
+            List<Tag> downloadedTags = new();
+            int downloadedTagsCount = 0;
+            int currentPage = 1;
+            while (downloadedTagsCount < quantity)
             {
-                int pageSize = quantity - tagsTotal > maximumPageSize? maximumPageSize : quantity - tagsTotal;
-                string url = $"https://api.stackexchange.com/2.3/tags?order={sortOrder}&sort={sortType}&site={site}&page={page}&pagesize={pageSize}";
-                var downloadedTags = await GetAsync<TagResponse>(url);
-                tags.AddRange(downloadedTags.items);
+                int pageSize = quantity - downloadedTagsCount > maximumPageSize? maximumPageSize : quantity - downloadedTagsCount;
+                string url = $"https://api.stackexchange.com/2.3/tags?order={sortOrder}&sort={sortType}&site={site}&page={currentPage}&pagesize={pageSize}";
+                var response = await GetAsync<TagResponse>(url);
+                downloadedTags.AddRange(response.items);
 
-                if (!downloadedTags.has_more)
+                if (!response.has_more)
                 {
                     break;
                 }
 
-                if(downloadedTags.quota_remaining == 0)
+                if(response.quota_remaining == 0)
                 {
                     throw new RateLimitException("You have reached your daily request limit! Try again in 24 hours.");
                 }
 
-                page++;
-                tagsTotal += downloadedTags.items.Length;
+                currentPage++;
+                downloadedTagsCount += response.items.Length;
             }
 
             TagViewModel tagVM = new()
             {
-                Tags = tags,
-                TotalCount = tags.Sum(c => c.count)
+                Tags = downloadedTags,
+                TotalCount = downloadedTags.Sum(c => c.count)
             };
             return tagVM;
         }
@@ -56,11 +56,19 @@ namespace StackoverflowTagBrowser.Data.Services.StackExchangeService
             {
                 throw new HttpRequestException("Executed request returned errors!");
             }
-            var contentStream = await response.Content.ReadAsStreamAsync();
-            var decompressedStream = new GZipStream(contentStream, CompressionMode.Decompress);
+            string responseString;
+            if (response.Content.Headers.ContentEncoding.Contains("gzip"))
+            {
+                var contentStream = await response.Content.ReadAsStreamAsync();
+                var decompressedStream = new GZipStream(contentStream, CompressionMode.Decompress);
 
-            using var streamReader = new StreamReader(decompressedStream);
-            var responseString = await streamReader.ReadToEndAsync();
+                using var streamReader = new StreamReader(decompressedStream);
+                responseString = await streamReader.ReadToEndAsync();
+            }
+            else
+            {
+                responseString = await response.Content.ReadAsStringAsync();
+            }
 
             var TResponse = JsonConvert.DeserializeObject<T>(responseString);
             return TResponse;
