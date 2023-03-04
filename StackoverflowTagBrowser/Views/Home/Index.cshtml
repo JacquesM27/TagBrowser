@@ -1,0 +1,28 @@
+﻿@using StackoverflowTagBrowser.ViewModels;
+@model TagViewModel
+@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Tag</th>
+                <th>Count</th>
+                <th>Popularity %</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var tag in Model.Tags)
+            {
+                <tr>
+                    <td>@tag.name</td>
+                    <td>@tag.count</td>
+                    <td>@(((float)tag.count / Model.TotalCount * 100).ToString("F2"))%</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
