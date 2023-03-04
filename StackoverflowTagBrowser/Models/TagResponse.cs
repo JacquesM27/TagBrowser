@@ -1,4 +1,7 @@
-﻿namespace StackoverflowTagBrowser.Models
+﻿using System.ComponentModel.DataAnnotations;
+using System.Xml.Linq;
+
+namespace StackoverflowTagBrowser.Models
 {
     public class TagResponse
     {
@@ -13,7 +16,9 @@
         public bool has_synonyms { get; set; }
         public bool is_moderator_only { get; set; }
         public bool is_required { get; set; }
+        [Display(Name = "Count")]
         public int count { get; set; }
+        [Display(Name = "Name")]
         public string name { get; set; }
     }
 
