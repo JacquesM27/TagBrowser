@@ -59,11 +59,7 @@ namespace StackoverflowTagBrowser.Data.Services.StackExchangeService
             string responseString;
             if (response.Content.Headers.ContentEncoding.Contains("gzip"))
             {
-                var contentStream = await response.Content.ReadAsStreamAsync();
-                var decompressedStream = new GZipStream(contentStream, CompressionMode.Decompress);
-
-                using var streamReader = new StreamReader(decompressedStream);
-                responseString = await streamReader.ReadToEndAsync();
+                responseString = await UnzipContent(response.Content);
             }
             else
             {
@@ -74,5 +70,12 @@ namespace StackoverflowTagBrowser.Data.Services.StackExchangeService
             return TResponse;
         }
 
+        private async Task<string> UnzipContent(HttpContent content)
+        {
+            var contentStream = await content.ReadAsStreamAsync();
+            var decompressedStream = new GZipStream(contentStream, CompressionMode.Decompress);
+            using var streamReader = new StreamReader(decompressedStream);
+            return await streamReader.ReadToEndAsync();
+        }
     }
 }
