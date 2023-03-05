@@ -10,7 +10,7 @@ namespace StackoverflowTagBrowser.Data.Services.StackExchangeService
     public class StackExchageService : IStackExchangeService
     {
         private readonly HttpClient _httpClient;
-        private readonly int maximumPageSize = 100;
+        private const int maximumPageSize = 100;
         public StackExchageService(IHttpClientFactory httpClientFactory)
         {
             _httpClient = httpClientFactory.CreateClient();
